@@ -97,6 +97,7 @@ export default class Employee {
   async getAllEmployees(req, res, next) {
     try {
       const employees = await employeeServices.getAllEmployees();
+      console.log("+++++",employees);
       if (employees) {
         return res.status(200).json({
           success: true,
@@ -110,30 +111,100 @@ export default class Employee {
     }
   }
 
-
-  async deleteEmployee(req,res,next) {
+  async deleteEmployee(req, res, next) {
     try {
       const { employee_code } = req.params;
-      
-          const employee = await employeeServices.getOneEmployee({employee_code});
-          if(employee){
-              const update = await employeeServices.deleteEmployee({employee_code});
-    
-              return res.status(200).json({
-                success: true,
-                status: 200,
-                data: update,
-                message: "employee deleted successfully"
-              });
-            }else{
-              return res.status(404).json({
-                status: 404,
-                message: "Employee not found"
-              })
-            }
-            
-          } catch (err) {
-          next(err);
+
+      const employee = await employeeServices.getOneEmployee({ employee_code });
+      if (employee) {
+        const update = await employeeServices.deleteEmployee({ employee_code });
+
+        return res.status(200).json({
+          success: true,
+          status: 200,
+          data: update,
+          message: "employee deleted successfully",
+        });
+      } else {
+        return res.status(404).json({
+          status: 404,
+          message: "Employee not found",
+        });
       }
+    } catch (err) {
+      next(err);
     }
   }
+
+  // Suspend Employee
+
+  async suspendEmployee(req, res, next) {
+    try {
+      const employee_code = req.params.employee_code;
+      const employee = await employeeServices.getOneEmployee({ employee_code });
+      if (employee.position == "MANAGER") {
+        res.status(400).json({
+          status: false,
+          message: "Manager can not be suspended",
+        });
+      } else if (employee.status == "INACTIVE") {
+        res.status(400).json({
+          status: false,
+          message: "Employee already suspended",
+        });
+      } else {
+        const suspended = await employeeServices.upDateEmployee({
+          status: "INACTIVE",
+        });
+        if (suspended) {
+          res.status(200).json({
+            status: true,
+            message: "Employee suspended",
+          });
+        }
+      }
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // Activate Employee
+
+  async activateEmployee(req, res, next) {
+    try {
+      const employee_code = req.params.employee_code;
+      const employee = await employeeServices.getOneEmployee({ employee_code });
+      if (employee.status == "ACTIVE") {
+        res.status(400).json({
+          status: false,
+          message: "Account already activated",
+        });
+      } else {
+        const activated = await employeeServices.upDateEmployee({
+          status: "ACTIVE",
+        });
+        if (activated) {
+          res.status(200).json({
+            status: true,
+            message: "Employee activated successfully",
+          });
+        }
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Search Employee
+
+  async searchEmployee (req,res){
+    const keyWord = req.params.keyWord;
+    if(keyWord.length<1){
+      res.status(400).json({status:false, message:'Please provide searching keyword'})
+    }else{
+      const results = await employeeServices.searchEmployee(keyWord);
+      results ? res.status(200).json({status:true,results:results.result})
+      :res.status(results.statusCode).json({status:true,message:results.message})
+    }
+  }
+}

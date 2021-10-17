@@ -1,10 +1,10 @@
-// import swaggerUI from 'swagger-ui-express';
+import swaggerUI from 'swagger-ui-express';
 import express from 'express';
 import dotenv from 'dotenv';
 import router from './routes/index';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-// import swaggerDocs from './docs';
+import swaggerDocs from './docs';
 
 dotenv.config();
 
@@ -12,6 +12,7 @@ const app = express();
 app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+router.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 app.use(router);
 app.use((err, req, res, next) => {
     console.log(err);
